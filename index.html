@@ -728,24 +728,21 @@ const ROLE_PERMS = {
 const SK = {users:'mz_portal_users_v3', org:'mz_portal_org', feed:'mz_portal_feed', vac:'mz_portal_vac'};
 let USERS=[], orgNodes=[], feedItems=[], vacRequests=[];
 let currentUser=null, editingUserId=null, editingOrgId=null, currentVacId=null;
-
 async function loadAll(){
-  showSync('Cargando datos...','loading');
-  try {
-    USERS = await loadFromSheets(SK.users, 'getUsers', seedUsers);
-  } catch(e){ USERS=seedUsers(); }
-  try {
-    orgNodes = await loadFromSheets(SK.org, 'getOrg', seedOrg);
-  } catch(e){ orgNodes=seedOrg(); }
-  try {
-    feedItems = await loadFromSheets(SK.feed, 'getFeed', seedFeed);
-  } catch(e){ feedItems=seedFeed(); }
-  try {
-    const remoteVac = await gasCall('getVac');
-    if(remoteVac) { vacRequests=remoteVac; localStorage.setItem(SK.vac,JSON.stringify(vacRequests)); }
-    else { vacRequests = JSON.parse(localStorage.getItem(SK.vac)||'[]'); }
-  } catch(e){ vacRequests=[]; }
-  showSync('Listo','success');
+  showSync('Cargando datos...', 'loading');
+
+  const loaded = await loadPortalState();
+
+  if(!loaded){
+    USERS = seedUsers();
+    orgNodes = seedOrg();
+    feedItems = seedFeed();
+    vacRequests = [];
+
+    await savePortalState();
+  }
+
+  showSync('Listo', 'success');
 }
  const save = (changedSheet=null, changedData=null) => {
   localStorage.setItem(SK.users, JSON.stringify(USERS));
